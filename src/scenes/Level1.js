@@ -2,7 +2,8 @@ import fondoImgSrc from '../assets/nivel1/fondo.jpg';
 import casasImgSrc from '../assets/nivel1/casas.png';
 import Cholita from '../entities/cholita.js';
 import DoorScene from './DoorScene.js';
-
+import RisaBruj from '../../bruja/risabruja.ogg';
+import Bruja2Img from '../../bruja/Bruja2.png';
 export default class Level1Scene {
     constructor({ canvas, ctx, camera, goTo, onEnterDoor, initialState = null, destroyedDoorIds = [] }) {
         this.canvas = canvas;
@@ -213,11 +214,9 @@ export default class Level1Scene {
 
     /* === Transición de Bruja === */
     _initWitchTransition() {
-        this._witchAudio = new Audio();
-        this._witchAudio.src = '/bruja/risabruja.ogg'; // ruta pública
+        this._witchAudio = new Audio(RisaBruj);
         this._witchAudio.loop = false;
         this._witchAudio.volume = 0.8;
-
         this._createWitchOverlay();
     }
 
@@ -250,7 +249,7 @@ export default class Level1Scene {
 
         // Imagen de la bruja
         const witchImg = document.createElement('img');
-        witchImg.src = './bruja/bru.jpg.png';
+        witchImg.src = Bruja2Img;
         witchImg.style.cssText = `
             width: 100%;
             height: auto;

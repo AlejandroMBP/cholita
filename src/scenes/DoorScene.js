@@ -1,6 +1,7 @@
 // Import only the witch image that works
 import witchImageSrc from '../../bruja/bru.jpg.png';
-
+import BienvenidosAudio from '../../bruja/bienvenidosAMiMundo.mp3';
+import AmbienteTetrico from '../../bruja/ambientaltetrico2.wav';
 export default class Door1Scene {
     constructor({ canvas, ctx, camera, doorId, goBack }) {
         this.canvas = canvas;
@@ -122,13 +123,11 @@ export default class Door1Scene {
 
     _initAudio() {
         // Audio de bienvenida - usando ruta relativa al public
-        this.welcomeAudio = new Audio();
-        this.welcomeAudio.src = '/bruja/bienvenidos a mi mundo.mp3';
+        this.welcomeAudio = new Audio(BienvenidosAudio);
         this.welcomeAudio.volume = 0.7;
 
         // Audio ambiental tétrico (loop)
-        this.ambientAudio = new Audio();
-        this.ambientAudio.src = '/bruja/ambientaltetrico2.wav';
+        this.ambientAudio = new Audio(AmbienteTetrico);
         this.ambientAudio.loop = true;
         this.ambientAudio.volume = 0.4;
 
