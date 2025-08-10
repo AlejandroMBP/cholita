@@ -79,7 +79,7 @@ window.addEventListener('load', () => {
       startGame();
     });
   } else {
-    // No hay formulario -> arranca directo
+    // No hay formulario -> arranca directdasddasd
     startGame();
   }
 });
