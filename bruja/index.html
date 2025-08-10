@@ -2,396 +2,1546 @@
 <html lang="es">
 
 <head>
-    <meta charset="utf-8" />
-    <title>CHOLITA 3D - Movimiento Visual sin Piso</title>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BRUJA LEGENDS - Strategy Card Game</title>
     <style>
-        :root {
-            --glass: rgba(255, 255, 255, .12);
-            --glass2: rgba(255, 255, 255, .18);
-        }
-
-        html,
-        body {
-            height: 100%;
+        * {
             margin: 0;
+            padding: 0;
+            box-sizing: border-box;
         }
 
         body {
-            background: radial-gradient(1200px 600px at 50% 60%, #0f2033 0%, #081423 60%, #040a15 100%);
-            overflow: hidden;
-            font-family: Arial, system-ui;
+            font-family: 'Times New Roman', serif;
+            background: linear-gradient(180deg, #1a4a5c 0%, #2c1810 50%, #0d2818 100%);
+            color: #d4af37;
+            overflow-x: hidden;
         }
 
-        canvas {
-            display: block;
-        }
-
-        #info {
-            position: fixed;
-            left: 12px;
-            top: 12px;
-            z-index: 100;
-            color: #fff;
-            padding: 12px 14px;
-            border-radius: 10px;
-            background: rgba(0, 0, 0, .55);
-            line-height: 1.35;
-            font-size: 14px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
-            user-select: none;
-        }
-
-        #status {
-            margin-top: 6px;
-            opacity: .9
-        }
-
-        #pad {
-            position: fixed;
-            left: 16px;
-            bottom: 16px;
-            z-index: 100;
-            display: grid;
-            gap: 8px;
-        }
-
-        #pad .row {
+        /* Header Hero Section */
+        .hero-section {
+            height: 100vh;
+            background:
+                radial-gradient(circle at 30% 20%, rgba(26, 74, 92, 0.8) 0%, transparent 50%),
+                radial-gradient(circle at 70% 80%, rgba(44, 24, 16, 0.8) 0%, transparent 50%),
+                radial-gradient(circle at 50% 50%, rgba(138, 43, 226, 0.3) 0%, transparent 70%),
+                linear-gradient(135deg, #0a0f1b 0%, #1a2845 50%, #2c1810 100%),
+                url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><filter id="noise"><feTurbulence baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/><feColorMatrix values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.05 0"/></filter></defs><rect width="100" height="100" filter="url(%23noise)" opacity="0.4"/></svg>');
+            position: relative;
             display: flex;
-            gap: 8px;
+            flex-direction: column;
             justify-content: center;
+            align-items: center;
+            text-align: center;
+            overflow: hidden;
         }
 
-        .btn {
-            width: 56px;
-            height: 56px;
-            border-radius: 12px;
-            border: 1px solid rgba(255, 255, 255, .25);
-            background: var(--glass);
-            color: #fff;
-            font-size: 20px;
-            font-weight: 700;
-            backdrop-filter: blur(6px);
-            -webkit-backdrop-filter: blur(6px);
-            user-select: none;
-            -webkit-user-select: none;
-            touch-action: none;
-            cursor: pointer;
-            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 4px 16px rgba(0, 0, 0, .25);
+        .hero-background {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            /* height: 100%; */
+            background:
+                radial-gradient(ellipse at top, rgba(13, 40, 24, 0.1) 0%, rgba(26, 74, 92, 0.2) 100%);
+            z-index: 2;
         }
 
-        .btn:active {
-            transform: scale(.96);
-            background: var(--glass2);
+        .hero-content {
+            position: relative;
+            z-index: 10;
         }
 
-        #jump {
-            position: fixed;
-            right: 16px;
-            bottom: 28px;
-            z-index: 100;
-            width: 110px;
-            height: 56px;
-            letter-spacing: .5px;
-            font-size: 14px;
+        .game-title {
+            font-size: 8rem;
+            font-weight: bold;
+            color: #ffffff;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.5);
+            margin-bottom: 0.5rem;
+            letter-spacing: 0.1em;
+            animation: epic-glow 3s ease-in-out infinite alternate;
         }
 
-        #fps {
-            position: fixed;
-            right: 16px;
-            top: 12px;
-            z-index: 100;
-            color: #fff;
-            opacity: .8;
-            font-size: 12px;
-            background: rgba(0, 0, 0, .45);
-            padding: 6px 8px;
+        .game-subtitle {
+            font-size: 1.2rem;
+            color: #c9a961;
+            letter-spacing: 0.3em;
+            margin-bottom: 3rem;
+            text-transform: uppercase;
+        }
+
+        .cta-button {
+            background: linear-gradient(45deg, #d4af37, #ffd700, #f4d03f);
+            color: #2c1810;
+            padding: 18px 45px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            border: none;
             border-radius: 8px;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            position: relative;
+            overflow: hidden;
+
+            /* Sombras para efecto 3D */
+            box-shadow:
+                0 8px 0 #070707,
+                /* sombra sólida abajo */
+                0 6px 20px rgba(212, 175, 55, .5),
+                inset 0 1px 0 rgba(255, 255, 255, .3);
+            transition: all 0.2s ease;
+        }
+
+        /* Brillo animado */
+        .cta-button::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg,
+                    transparent,
+                    rgba(255, 255, 255, 0.4),
+                    transparent);
+            transition: left 0.5s ease;
+        }
+
+        .cta-button:hover::before {
+            left: 100%;
+        }
+
+        /* Hover levanta el botón */
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow:
+                0 11px 0 #a67c00,
+                0 12px 30px rgba(212, 175, 55, .7),
+                0 0 40px rgba(255, 215, 0, .6);
+        }
+
+        /* Activo: se aplasta y cambia a rojo sangre */
+        .cta-button:active {
+            background: linear-gradient(45deg, #8b0000, #ff0000, #b22222);
+            color: white;
+            transform: translateY(4px);
+            box-shadow:
+                0 4px 0 #5a0000,
+                0 4px 12px rgba(139, 0, 0, .7);
+        }
+
+
+        .game-preview {
+            position: absolute;
+            right: 6%;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 2;
+        }
+
+        .card-stack {
+            width: 300px;
+            /* antes 200 */
+            height: 320px;
+            /* un poco más alto */
+        }
+
+        .card-1 {
+            transform: translate(-80px, 10px) rotate(-12deg);
+            z-index: 2;
+        }
+
+        .card-2 {
+            transform: translate(0px, 0px) rotate(-2deg);
+            z-index: 3;
+        }
+
+        /* arriba de todas */
+        .card-3 {
+            transform: translate(80px, 10px) rotate(12deg);
+            z-index: 1;
+        }
+
+        .game-card {
+            position: absolute;
+            width: 350px;
+            height: 380px;
+            background: linear-gradient(145deg, #2c1810, #1a1a1a);
+            border: 2px solid #d4af37;
+            border-radius: 12px;
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: #d4af37;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            overflow: hidden;
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(212, 175, 55, 0.1), transparent);
+            transform: rotate(45deg);
+            transition: all 0.6s ease;
+            opacity: 0;
+        }
+
+        .game-card:hover::before {
+            opacity: 1;
+            animation: card-shine 0.6s ease-in-out;
+        }
+
+        .game-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 12px 30px rgba(212, 175, 55, 0.4);
+            border-color: #f4d03f;
+        }
+
+        .card-1 {
+            transform: rotate(-10deg) translateZ(0);
+            z-index: 3;
+        }
+
+        .card-2 {
+            transform: rotate(5deg) translate(20px, 10px);
+            z-index: 2;
+        }
+
+        .card-3 {
+            transform: rotate(-5deg) translate(-10px, 20px);
+            z-index: 1;
+        }
+
+        /* Navigation */
+        .nav-bar {
+            position: absolute;
+            top: 0;
+            width: 100%;
+            padding: 20px 0;
+            z-index: 20;
+            background: rgba(13, 40, 24, 0.3);
+            backdrop-filter: blur(10px);
+        }
+
+        .nav-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: center;
+            gap: 40px;
+        }
+
+        .nav-link {
+            color: #d4af37;
+            text-decoration: none;
+            font-size: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: color 0.3s ease;
+        }
+
+        .nav-link:hover {
+            color: #f4d03f;
+        }
+
+        /* Main Content Sections */
+        .content-section {
+            max-width: 1200px;
+            margin: 0 auto;
+
+
+            grid-template-columns: 1fr 1fr;
+            gap: 60px;
+            align-items: center;
+        }
+
+        .section-content h2 {
+            font-size: 2.5rem;
+            color: #d4af37;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .section-content p {
+            font-size: 1.4rem;
+            line-height: 1.6;
+            color: #c9a961;
+            margin-bottom: 30px;
+        }
+
+        .feature-list {
+            list-style: none;
+            margin: 20px 0;
+        }
+
+        .feature-list li {
+            color: #c9a961;
+            margin: 10px 0;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .feature-list li::before {
+            content: "⚡";
+            position: absolute;
+            left: 0;
+            color: #d4af37;
+        }
+
+        .game-screenshot {
+
+            border: 3px solid #d4af37;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #d4af37;
+            font-size: 1.2rem;
+            text-align: center;
+        }
+
+        /* Cards Display Section */
+        .cards-showcase {
+            background: rgba(13, 40, 24, 0.4);
+            padding: 80px 20px;
+        }
+
+        .cards-grid {
+            max-width: 1000px;
+            margin: 0 auto;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 30px;
+            margin-top: 40px;
+        }
+
+        .showcase-card {
+            background: linear-gradient(145deg, #2c1810, #1a1a1a);
+            border: 2px solid #d4af37;
+            border-radius: 10px;
+            padding: 20px;
+            text-align: center;
+            color: #d4af37;
+            transition: transform 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
+        }
+
+        .showcase-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            box-shadow: 0 15px 35px rgba(212, 175, 55, 0.4);
+            border-color: #f4d03f;
+        }
+
+        .showcase-card::before {
+            content: '';
+            position: absolute;
+            top: -2px;
+            left: -2px;
+            right: -2px;
+            bottom: -2px;
+            background: linear-gradient(45deg, #d4af37, #8a2be2, #ff8c00, #d4af37);
+            border-radius: 12px;
+            opacity: 0;
+            z-index: -1;
+            transition: opacity 0.3s ease;
+            animation: border-rotate 3s linear infinite;
+        }
+
+        .showcase-card:hover::before {
+            opacity: 0.7;
+        }
+
+        .card-icon {
+            font-size: 2.5rem;
+            margin-bottom: 15px;
+            filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.6));
+            animation: icon-pulse 2s ease-in-out infinite;
+        }
+
+        /* Beta Signup Section */
+        .signup-section {
+            background: linear-gradient(135deg, #1a4a5c, #0d2818);
+            padding: 80px 20px;
+            text-align: center;
+        }
+
+        .signup-title {
+            font-size: 2.5rem;
+            color: #d4af37;
+            margin-bottom: 20px;
+        }
+
+        .signup-subtitle {
+            color: #c9a961;
+            font-size: 1.1rem;
+            margin-bottom: 40px;
+        }
+
+        .signup-form {
+            max-width: 500px;
+            margin: 0 auto;
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .email-input {
+            flex: 1;
+            padding: 18px;
+            border: 2px solid #d4af37;
+            border-radius: 8px;
+            background: rgba(44, 24, 16, 0.9);
+            color: #d4af37;
+            font-size: 1rem;
+            transition: all 0.3s ease;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .email-input:focus {
+            outline: none;
+            border-color: #ffd700;
+            box-shadow:
+                inset 0 2px 4px rgba(0, 0, 0, 0.3),
+                0 0 20px rgba(255, 215, 0, 0.4);
+            transform: scale(1.02);
+        }
+
+        .email-input::placeholder {
+            color: #c9a961;
+        }
+
+        .submit-btn {
+            padding: 18px 35px;
+            background: linear-gradient(45deg, #d4af37, #ffd700, #f4d03f);
+            color: #2c1810;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+        }
+
+        .submit-btn:hover {
+            transform: translateY(-2px) scale(1.05);
+            box-shadow: 0 8px 25px rgba(212, 175, 55, 0.6);
+        }
+
+        /* Footer */
+        .footer {
+            background: #0d2818;
+            padding: 40px 20px;
+            text-align: center;
+            border-top: 2px solid #d4af37;
+        }
+
+        .footer-icons {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin-bottom: 20px;
+        }
+
+        .footer-icon {
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(145deg, #2c1810, #1a4a5c);
+            border: 2px solid #d4af37;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5rem;
+            color: #d4af37;
+            transition: transform 0.3s ease;
+        }
+
+        .footer-icon:hover {
+            transform: scale(1.1);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .game-title {
+                font-size: 3rem;
+            }
+
+            .content-section {
+                grid-template-columns: 1fr;
+                text-align: center;
+            }
+
+            .game-preview {
+                display: none;
+            }
+
+            .signup-form {
+                flex-direction: column;
+            }
         }
     </style>
 </head>
 
 <body>
-    <div id="info">
-        🧙‍♀️ <strong>BRUJA 3D</strong><br>
-        <small>WASD / ↑↓←→ mover • Espacio saltar • Arrastra para orbitar • Rueda zoom</small>
-        <div id="status">Cargando...</div>
-    </div>
-
-    <div id="pad">
-        <div class="row"><button class="btn" data-key="KeyW">▲</button></div>
-        <div class="row">
-            <button class="btn" data-key="KeyA">◀</button>
-            <button class="btn" data-key="KeyS">▼</button>
-            <button class="btn" data-key="KeyD">▶</button>
+    <!-- Navigation -->
+    <!-- <nav class="nav-bar">
+        <div class="nav-content">
+            <a href="#" class="nav-link">Inicio</a>
+            <a href="#" class="nav-link">Noticias</a>
+            <a href="#" class="nav-link">El Juego</a>
+            <a href="#" class="nav-link">Nuestro Equipo</a>
+            <a href="#" class="nav-link">Comunidad</a>
         </div>
-    </div>
-    <button id="jump" class="btn" data-key="Space">SALTAR</button>
+    </nav> -->
 
-    <div id="fps">FPS: —</div>
+    <!-- Hero Section -->
+    <section class="hero-section" style="
+  /* añade aire interno abajo */
+  padding: clamp(20px,5vh,60px) clamp(16px,3vw,32px) clamp(56px,10vh,140px);
+  /* separa del siguiente bloque */
+  margin-block-end: clamp(32px,8vh,120px);
+  position: relative;
+">
+        <!-- IMAGEN DE FONDO ATRÁS DE TODO CON EFECTOS 3D -->
+        <div style="
+    position: absolute; inset: 0 auto 0 0; width: 50%; height: 100%;
+    background: url('./bru.jpg.png') center/cover no-repeat;
+    z-index: 0; transform: perspective(1000px) rotateY(-5deg) rotateX(2deg);
+    filter: drop-shadow(15px 15px 30px rgba(0,0,0,.7)) brightness(1.1) contrast(1.2);
+    
+    pointer-events:none; /* no bloquea clicks */
+  "></div>
 
-    <!-- Three r128 + GLTFLoader -->
-    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
-    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+        <div class="hero-background"></div>
+
+        <div class="hero-content" style="position:relative; z-index:2;">
+            <h1 class="game-title">CHOLITA</h1>
+            <p class="game-subtitle">Strategy Card Game</p>
+            <button class="cta-button" onclick="location.href='/index.html?play=1'">VAMOS A JUGAR</button>
+        </div>
+
+        <div class="game-preview" style="position:absolute; right:6%; top:50%; transform:translateY(-50%); z-index:2;">
+
+            <div class="card-stack">
+                <div class="game-card card-1">
+                    <div class="card-icon">
+                        <img src="./ben.png" alt="Ben" loading="lazy">
+                    </div>
+
+
+                </div>
+                <style>
+                    /* SOLO la imagen dentro de .game-card.card-1 */
+                    .game-card.card-1 .card-icon img {
+                        width: 300px;
+                        /* ajusta a tu gusto */
+                        height: 900px;
+                        /* ajusta a tu gusto */
+                        object-fit: contain;
+                        display: block;
+                    }
+                </style>
+                <div class="game-card card-2">
+                    <div class="card-icon">🔮</div>
+                    <div>Crystal Ball</div>
+                </div>
+                <div class="game-card card-3">
+                    <div class="card-icon">⚡</div>
+                    <div>Lightning Spell</div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+    <!-- <section class="content-section">
+        <div class="section-content">
+            <h2>La historia de la Cholita</h2>
+            <p>Una joven ñusta del altiplano, marcada por una antigua maldición. Su padre, un yatiri, pidió perdón a la
+                Pachamama, pero el castigo cayó sobre ella.</p>
+            <p>En segundos, su juventud se desvaneció, y su misión ahora es romper el hechizo que la ata, enfrentando
+                criaturas y desafíos que pondrán a prueba su valor.</p>
+            <ul class="feature-list">
+                <li>Historia inspirada en leyendas andinas</li>
+                <li>Transformación mágica y misteriosa</li>
+                <li>Aventura para romper la maldición</li>
+                <li>Encuentros con seres místicos y engañosos</li>
+            </ul>
+
+        </div>
+        <div class="game-screenshot">
+            <div>
+                🎮 Vista previa del juego<br>
+                <small>Interfaz de combate estratégico</small>
+            </div>
+        </div>
+    </section> -->
+
+    <section class="content-section carousel" aria-label="Historias de CHOLITA">
+        <div class="carousel__viewport">
+            <!-- Slide 1: La Cholita -->
+            <article class="carousel__slide" aria-roledescription="slide" aria-label="1 de 2">
+                <div class="section-content">
+                    <h2>La historia de la Cholita</h2>
+                    <p>Una joven ñusta del altiplano, marcada por una antigua maldición. Su padre, un yatiri, pidió
+                        perdón a la
+                        Pachamama, pero el castigo cayó sobre ella.</p>
+                    <p>En segundos, su juventud se desvaneció. Su misión ahora es romper el hechizo que la ata,
+                        enfrentando criaturas
+                        y desafíos que pondrán a prueba su valor.</p>
+                    <ul class="feature-list">
+                        <li>Historia inspirada en leyendas andinas</li>
+                        <li>Transformación mágica y misteriosa</li>
+                        <li>Aventura para romper la maldición</li>
+                        <li>Encuentros con seres místicos y engañosos</li>
+                    </ul>
+                </div>
+
+                <div class="game-screenshot">
+                    <figure>
+                        <img src="choli.png" alt="Vista previa: la Cholita bajo un cielo tormentoso" />
+
+                    </figure>
+                </div>
+            </article>
+
+            <!-- Slide 2: El Padre Yatiri -->
+            <article class="carousel__slide" aria-roledescription="slide" aria-label="2 de 2">
+                <div class="section-content">
+                    <h2>El juramento del Yatiri</h2>
+                    <p>El padre de la ñusta, un yatiri consumido por la culpa, suplica perdón a la Madre Tierra por
+                        haber roto el
+                        equilibrio de la comunidad.</p>
+                    <p>Ahora jura guiar a su hija en silencio, ofreciéndole los saberes y un bastón sagrado para sellar
+                        el portal y
+                        reparar el daño.</p>
+                    <ul class="feature-list">
+                        <li>Redención y responsabilidad</li>
+                        <li>Símbolos y amuletos andinos</li>
+                        <li>Vínculo padre–hija</li>
+                        <li>Búsqueda para restaurar el equilibrio</li>
+                    </ul>
+                </div>
+
+                <div class="game-screenshot">
+                    <figure>
+                        <img src="padre.png" alt="Vista previa: el yatiri realizando una ofrenda nocturna" />
+
+                    </figure>
+                </div>
+            </article>
+        </div>
+
+        <!-- Controles -->
+        <div class="carousel__controls">
+            <button class="carousel__btn prev" aria-label="Anterior" title="Anterior">‹</button>
+            <div class="carousel__dots" role="tablist" aria-label="Seleccionar historia">
+                <button class="carousel__dot" role="tab" aria-selected="true" aria-controls="slide-1"
+                    title="Historia de la Cholita"></button>
+                <button class="carousel__dot" role="tab" aria-selected="false" aria-controls="slide-2"
+                    title="Historia del Yatiri"></button>
+            </div>
+            <button class="carousel__btn next" aria-label="Siguiente" title="Siguiente">›</button>
+        </div>
+    </section>
+
+    <style>
+        .content-section.carousel {
+            --gap: clamp(16px, 3vw, 28px);
+            --radius: 18px;
+            --shadow: 0 10px 30px rgba(0, 0, 0, .15);
+            position: relative;
+            padding: clamp(20px, 4vw, 40px);
+            background: #0f1115;
+            color: #eef1f5;
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+
+        .carousel__viewport {
+            display: grid;
+            grid-auto-flow: column;
+            grid-auto-columns: 100%;
+            scroll-snap-type: x mandatory;
+            overflow-x: auto;
+            overscroll-behavior-x: contain;
+            scrollbar-width: none;
+        }
+
+        .carousel__viewport::-webkit-scrollbar {
+            display: none;
+        }
+
+        .carousel__slide {
+            scroll-snap-align: start;
+            display: grid;
+            grid-template-columns: 1.2fr 1fr;
+            gap: var(--gap);
+            align-items: stretch;
+            padding: 8px 4px;
+            min-height: clamp(340px, 55vh, 560px);
+        }
+
+        /* stack en móvil */
+        @media (max-width: 900px) {
+            .carousel__slide {
+                grid-template-columns: 1fr;
+                min-height: auto;
+            }
+        }
+
+        .section-content h2 {
+            margin: 0 0 8px;
+
+            line-height: 1.15;
+        }
+
+        .section-content p {
+            margin: 8px 0;
+            color: #cfd6df;
+        }
+
+        .feature-list {
+            display: grid;
+            gap: 6px;
+            margin: 12px 0 0;
+            padding-left: 18px;
+        }
+
+        .feature-list li {
+            color: #b7c2cf;
+        }
+
+        .game-screenshot {
+            background: linear-gradient(180deg, rgba(255, 255, 255, .06), rgba(255, 255, 255, .02));
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: var(--radius);
+            box-shadow: var(--shadow);
+            display: grid;
+            place-items: center;
+            padding: clamp(10px, 2vw, 16px);
+        }
+
+        .game-screenshot figure {
+            margin: 0;
+            width: 100%;
+            height: 100%;
+            display: grid;
+            grid-template-rows: 1fr auto;
+            gap: 10px;
+        }
+
+        .game-screenshot img {
+            width: 95%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: calc(var(--radius) - 6px);
+        }
+
+        .game-screenshot figcaption {
+            text-align: center;
+            color: #a9b4c2;
+            font-size: .9rem;
+        }
+
+        .carousel__controls {
+            margin-top: clamp(12px, 2.2vw, 18px);
+            display: grid;
+            grid-template-columns: auto 1fr auto;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .carousel__btn {
+            background: #1b2030;
+            color: #eef1f5;
+            border: 1px solid rgba(255, 255, 255, .12);
+            border-radius: 12px;
+            width: 44px;
+            height: 44px;
+            font-size: 24px;
+            cursor: pointer;
+            transition: transform .15s ease, background .2s ease;
+        }
+
+        .carousel__btn:hover {
+            background: #242a3d;
+            transform: translateY(-1px);
+        }
+
+        .carousel__btn:active {
+            transform: translateY(0);
+        }
+
+        .carousel__dots {
+            display: flex;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .carousel__dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 999px;
+            border: 1px solid rgba(255, 255, 255, .35);
+            background: transparent;
+            cursor: pointer;
+        }
+
+        .carousel__dot[aria-selected="true"] {
+            background: #e8f0ff;
+            border-color: #e8f0ff;
+        }
+    </style>
 
     <script>
-        (function () {
-            const statusEl = document.getElementById('status');
-            const fpsEl = document.getElementById('fps');
+        (() => {
+            const viewport = document.querySelector('.carousel .carousel__viewport');
+            const slides = [...document.querySelectorAll('.carousel__slide')];
+            const dots = [...document.querySelectorAll('.carousel__dot')];
+            const prev = document.querySelector('.carousel .prev');
+            const next = document.querySelector('.carousel .next');
 
-            // ====== CONFIG ======
-            const TARGET_SIZE = 8.0;     // tamaño objetivo del modelo (grande)
-            const BACK_ANGLE = 0;       // si su “espalda” no coincide, prueba Math.PI / ±Math.PI/2
-            const WALK_BOB_AMP = 0.08;    // amplitud de bob
-            const WALK_BOB_FREQ = 6.5;     // frecuencia de bob (Hz aprox)
-            const DUST_COUNT = 800;     // cantidad de partículas
-            const DUST_BOX = 30;      // tamaño del área de partículas
-
-            // ====== Escena/cámara/render ======
-            const scene = new THREE.Scene();
-            const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.01, 10000);
-            camera.position.set(0, 5, 10);
-
-            const renderer = new THREE.WebGLRenderer({ antialias: true });
-            renderer.outputEncoding = THREE.sRGBEncoding;
-            renderer.setSize(innerWidth, innerHeight);
-            document.body.appendChild(renderer.domElement);
-
-            // Luces
-            scene.add(new THREE.AmbientLight(0xffffff, 0.9));
-            const dir = new THREE.DirectionalLight(0xffffff, 1.0);
-            dir.position.set(8, 12, 8);
-            scene.add(dir);
-
-            // ====== Estado ======
-            const keys = {};
-            let model = null;
-            let baseY = 0;               // altura base (para bob + salto)
-            let modelX = 0, modelY = 0, modelZ = 0;
-            let jumping = false, jumpSpeed = 0;
-            let camAX = 0, camAY = 0;    // órbita manual
-            let walkPhase = 0;           // fase del bob
-            let lastMoveDir = 0;         // -1 izquierda, +1 derecha, 0 ninguno (para perfil)
-
-            // ====== Partículas (polvo) ======
-            const dustGeom = new THREE.BufferGeometry();
-            const dustPos = new Float32Array(DUST_COUNT * 3);
-            for (let i = 0; i < DUST_COUNT; i++) {
-                dustPos[i * 3 + 0] = (Math.random() * 2 - 1) * DUST_BOX;   // x
-                dustPos[i * 3 + 1] = Math.random() * 4 + 0.2;         // y
-                dustPos[i * 3 + 2] = (Math.random() * 2 - 1) * DUST_BOX;   // z
+            function goTo(i) {
+                const index = Math.max(0, Math.min(i, slides.length - 1));
+                viewport.scrollTo({ left: slides[index].offsetLeft, behavior: 'smooth' });
+                updateDots(index);
             }
-            dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
-            const dustMat = new THREE.PointsMaterial({ size: 0.06, transparent: true, opacity: 0.55, depthWrite: false });
-            const dust = new THREE.Points(dustGeom, dustMat);
-            scene.add(dust);
 
-            // ====== Shadow Blob (sombra suave bajo los pies) ======
-            function makeShadowTexture(size = 256) {
-                const c = document.createElement('canvas'); c.width = c.height = size;
-                const ctx = c.getContext('2d');
-                const g = ctx.createRadialGradient(size / 2, size / 2, 10, size / 2, size / 2, size / 2);
-                g.addColorStop(0, 'rgba(0,0,0,0.25)');
-                g.addColorStop(1, 'rgba(0,0,0,0.0)');
-                ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
-                return new THREE.CanvasTexture(c);
+            function currentIndex() {
+                const left = viewport.scrollLeft;
+                let idx = 0, min = Infinity;
+                slides.forEach((s, i) => {
+                    const d = Math.abs(s.offsetLeft - left);
+                    if (d < min) { min = d; idx = i; }
+                });
+                return idx;
             }
-            const shadowTex = makeShadowTexture();
-            const shadow = new THREE.Mesh(
-                new THREE.PlaneGeometry(4.5, 4.5),
-                new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
-            );
-            shadow.rotation.x = -Math.PI / 2;
-            shadow.position.y = 0.001;
-            scene.add(shadow);
 
-            // ====== Cargar GLB y auto-centrar/escala ======
-            const loader = new THREE.GLTFLoader();
-            loader.load('./jijij.glb', (gltf) => {
-                model = gltf.scene;
+            function updateDots(active) {
+                dots.forEach((d, i) => d.setAttribute('aria-selected', i === active ? 'true' : 'false'));
+            }
 
-                model.traverse(n => {
-                    if (n.isMesh && !n.material) {
-                        n.material = new THREE.MeshStandardMaterial({ color: 0xbba37a, roughness: 0.7, metalness: 0.0 });
+            // Botones
+            prev.addEventListener('click', () => goTo(currentIndex() - 1));
+            next.addEventListener('click', () => goTo(currentIndex() + 1));
+
+            // Dots
+            dots.forEach((d, i) => d.addEventListener('click', () => goTo(i)));
+
+            // Teclado
+            viewport.addEventListener('keydown', (e) => {
+                if (e.key === 'ArrowLeft') goTo(currentIndex() - 1);
+                if (e.key === 'ArrowRight') goTo(currentIndex() + 1);
+            });
+            viewport.tabIndex = 0; // focus para teclado
+
+            // Actualiza dots al hacer scroll manual/touch
+            let ticking = false;
+            viewport.addEventListener('scroll', () => {
+                if (!ticking) {
+                    window.requestAnimationFrame(() => {
+                        updateDots(currentIndex());
+                        ticking = false;
+                    });
+                    ticking = true;
+                }
+            });
+
+            // Ajuste de altura (opcional): igualar altura al slide más alto
+            const resize = () => {
+                const h = Math.max(...slides.map(s => s.offsetHeight));
+                viewport.style.minHeight = h + 'px';
+            };
+            window.addEventListener('load', resize);
+            window.addEventListener('resize', resize);
+        })();
+    </script>
+
+    <!-- How to Play Section -->
+    <!--  -->
+    <!-- How to Play Section -->
+    <!-- How to Play Section -->
+    <section class="content-section howto-grid">
+        <!-- TEXTO -->
+        <div id="howto-illas" style="
+    position:relative; padding:28px 32px; border-radius:16px;
+    background:rgba(15,10,5,.35); border:1px solid rgba(255,200,80,.22);
+    box-shadow: inset 0 0 0 1px rgba(255,200,80,.06), 0 18px 40px rgba(0,0,0,.35);
+  ">
+            <style>
+                /* Estilos SÓLO para este bloque */
+                #howto-illas::before {
+                    content: "";
+                    position: absolute;
+                    inset: -1px;
+                    border-radius: inherit;
+                    padding: 1px;
+                    background: linear-gradient(180deg, rgba(255, 215, 130, .65),
+                            rgba(255, 195, 0, .18) 40%,
+                            rgba(255, 215, 130, .55));
+                    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                    -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+                    pointer-events: none;
+                }
+
+                #howto-illas h2 {
+                    margin: 0 0 8px;
+                    color: #ffd16a;
+                    font-weight: 800;
+                    text-shadow: 0 1px 0 rgba(0, 0, 0, .4);
+                }
+
+                #howto-illas .feature-list {
+                    list-style: none;
+                    margin: 16px 0 0;
+                    padding: 0;
+                }
+
+                #howto-illas .feature-list li {
+                    position: relative;
+                    margin: 10px 0;
+                    padding-left: 28px;
+                }
+
+                #howto-illas .feature-list li::before {
+                    content: "⚡";
+                    position: absolute;
+                    left: 0;
+                    top: .05em;
+                    opacity: .9;
+                }
+
+                /* ---- Layout y media ---- */
+                .howto-grid {
+                    display: grid;
+                    gap: 24px;
+                    align-items: start;
+                    grid-template-columns: minmax(0, 1.2fr) minmax(0, 1fr);
+                }
+
+                @media (max-width: 900px) {
+                    .howto-grid {
+                        grid-template-columns: 1fr;
                     }
-                    if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; }
+                }
+
+                .howto-media {
+                    position: relative;
+                    border-radius: 16px;
+                    padding: 8px;
+                    overflow: hidden;
+                    background: rgba(15, 10, 5, .35);
+
+                    box-shadow: inset 0 0 0 1px rgba(255, 200, 80, .06), 0 18px 40px rgba(0, 0, 0, .35);
+                }
+
+                .howto-media::before {
+                    content: "";
+                    position: absolute;
+                    inset: -1px;
+                    border-radius: inherit;
+                    padding: 1px;
+                    background: linear-gradient(180deg, rgba(255, 215, 130, .65),
+                            rgba(255, 195, 0, .18) 40%,
+                            rgba(255, 215, 130, .55));
+                    -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0);
+                    -webkit-mask-composite: xor;
+                    mask-composite: exclude;
+                    pointer-events: none;
+                }
+
+                .howto-media video {
+                    display: block;
+                    width: 100%;
+                    height: auto;
+                    aspect-ratio: 16/9;
+                    border-radius: 12px;
+                    background: #000;
+                }
+            </style>
+
+            <h2>¿Cómo se juega?</h2>
+            <p>Juegas con la cholita. Tu misión es romper la maldición reuniendo 7 illas
+                <strong>(amuletos sagrados andinos)</strong> en un pueblo-hub con 7 puertas.
+            </p>
+            <p>Cada puerta te cuenta un mito/leyenda boliviana en un cuento breve, te propone un acertijo y un reto de
+                exploración. Usa el doble salto y tu chancla boomerang para avanzar.</p>
+
+            <ul class="feature-list">
+                <li>Exploración libre en un pueblo-hub con 7 puertas</li>
+                <li>Acertijos inspirados en leyendas de Bolivia</li>
+                <li>Chancla boomerang: activa mecanismos, trae objetos y aturde enemigos</li>
+                <li>Mejoras de la chancla: Luz, Sal, Viento y Cinta Roja</li>
+                <li>Pistas opcionales a cambio de ofrendas/objetos</li>
+            </ul>
+        </div>
+
+        <!-- VIDEO (autoplay mute; audio se activa en la primera interacción global) -->
+        <div class="howto-media">
+            <video id="howtoVideo" src="./video.mp4" autoplay muted loop playsinline webkit-playsinline
+                preload="metadata" poster="./choli.png">
+            </video>
+        </div>
+    </section>
+
+    <script>
+        const v = document.getElementById('howtoVideo');
+
+        // Intenta sonar de inmediato (algunos navegadores lo permiten)
+        async function tryPlayWithSound() {
+            try {
+                v.muted = false;
+                await v.play();
+                // si funciona, ya suena
+            } catch {
+                // si no, reproduce en mute y espera una interacción real
+                v.muted = true;
+                await v.play().catch(() => { });
+                installUnlockHandlers();
+            }
+        }
+
+        function unlockSoundOnce() {
+            removeUnlockHandlers();
+            v.muted = false;
+            v.volume = 1;
+            v.play().catch(() => { });
+        }
+
+        function installUnlockHandlers() {
+            ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev => {
+                // 'wheel' no siempre desbloquea, pero lo intentamos
+                window.addEventListener(ev, unlockSoundOnce, { once: true, capture: true });
+            });
+        }
+        function removeUnlockHandlers() {
+            ['pointerdown', 'touchstart', 'keydown', 'wheel'].forEach(ev => {
+                window.removeEventListener(ev, unlockSoundOnce, { capture: true });
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', tryPlayWithSound);
+        // por si la pestaña estaba en segundo plano al cargar
+        document.addEventListener('visibilitychange', () => {
+            if (!document.hidden) tryPlayWithSound();
+        });
+    </script>
+
+
+
+    <!-- Cards Showcase -->
+    <section class="cards-showcase">
+        <div style="text-align: center; margin-bottom: 40px;">
+            <h2 style="font-size: 2.5rem; color: #d4af37;">Explora Nuestras Historias</h2>
+        </div>
+        <div class="cards-grid">
+            <div class="showcase-card">
+                <div class="card-icon">🧙‍♀️</div>
+                <h3>Brujas</h3>
+                <p>Maestras de la magia</p>
+            </div>
+            <div class="showcase-card">
+                <div class="card-icon">🔮</div>
+                <h3>Artefactos</h3>
+                <p>Objetos de poder</p>
+            </div>
+            <div class="showcase-card">
+                <div class="card-icon">⚡</div>
+                <h3>Hechizos</h3>
+                <p>Magia instantánea</p>
+            </div>
+            <div class="showcase-card">
+                <div class="card-icon">🐉</div>
+                <h3>Criaturas</h3>
+                <p>Aliados místicos</p>
+            </div>
+            <div class="showcase-card">
+                <div class="card-icon">🏰</div>
+                <h3>Estructuras</h3>
+                <p>Fortalezas mágicas</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Beta Signup -->
+    <section class="signup-section">
+        <h2 class="signup-title">Beta Sign-up</h2>
+        <p class="signup-subtitle">Déjanos tu email y obtén la oportunidad de probar el juego antes que nadie</p>
+        <form class="signup-form">
+            <input type="email" class="email-input" placeholder="Tu email aquí">
+            <button type="submit" class="submit-btn">Enviar</button>
+        </form>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+        <div class="footer-icons">
+            <div class="footer-icon">🎮</div>
+            <div class="footer-icon">📧</div>
+            <div class="footer-icon">🌐</div>
+            <div class="footer-icon">💬</div>
+            <div class="footer-icon">📱</div>
+        </div>
+        <p style="color: #c9a961;">&copy; 2024 CHOLITA Strategy Card Game. Todos los derechos reservados.</p>
+    </footer>
+
+    <script>
+        // ⚡ EFECTOS SÚPER GENIALES ⚡
+
+        // 🌟 Partículas mágicas mejoradas y más densas
+        function createMagicParticles() {
+            const hero = document.querySelector('.hero-section');
+
+            for (let i = 0; i < 100; i++) {
+                const particle = document.createElement('div');
+                const size = Math.random() * 6 + 2;
+                const colors = ['#d4af37', '#ffd700', '#ffcc00', '#f4d03f', '#8a2be2'];
+                const color = colors[Math.floor(Math.random() * colors.length)];
+
+                particle.style.cssText = `
+                    position: absolute;
+                    width: ${size}px;
+                    height: ${size}px;
+                    background: radial-gradient(circle, ${color}, transparent);
+                    border-radius: 50%;
+                    pointer-events: none;
+                    animation: enhanced-float ${Math.random() * 4 + 3}s infinite ease-in-out;
+                    left: ${Math.random() * 100}%;
+                    top: ${Math.random() * 100}%;
+                    opacity: ${Math.random() * 0.9 + 0.3};
+                    z-index: 5;
+                    box-shadow: 0 0 ${size * 3}px ${color}88;
+                `;
+                hero.appendChild(particle);
+            }
+        }
+
+        // 🔥 Animación de typing épica para el título
+        function typewriterEffect() {
+            const title = document.querySelector('.game-title');
+            const text = 'CHOLITA';
+            title.textContent = '';
+
+            for (let i = 0; i < text.length; i++) {
+                setTimeout(() => {
+                    title.textContent += text[i];
+                    // Efecto de explosión épica al escribir cada letra
+                    createLetterExplosion(title);
+                    title.style.animation = 'none';
+                    setTimeout(() => title.style.animation = 'epic-glow 3s ease-in-out infinite alternate', 50);
+                }, i * 400);
+            }
+        }
+
+        // Explosión épica para cada letra
+        function createLetterExplosion(element) {
+            const rect = element.getBoundingClientRect();
+            const x = rect.left + rect.width / 2;
+            const y = rect.top + rect.height / 2;
+
+            for (let i = 0; i < 12; i++) {
+                const spark = document.createElement('div');
+                spark.style.cssText = `
+                    position: fixed;
+                    width: 4px;
+                    height: 4px;
+                    background: radial-gradient(circle, #ffd700, #d4af37);
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    left: ${x}px;
+                    top: ${y}px;
+                    box-shadow: 0 0 10px #ffd700;
+                `;
+
+                document.body.appendChild(spark);
+
+                const angle = (Math.PI * 2 * i) / 12;
+                const velocity = Math.random() * 60 + 40;
+
+                spark.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    {
+                        transform: `translate(${Math.cos(angle) * velocity}px, ${Math.sin(angle) * velocity}px) scale(0)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: 800,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => spark.remove();
+            }
+        }
+
+        // 💥 Explosión de partículas al hacer click en botones
+        function createExplosion(x, y) {
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: fixed;
+                    width: 6px;
+                    height: 6px;
+                    background: radial-gradient(circle, #d4af37, #f4d03f);
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9999;
+                    left: ${x}px;
+                    top: ${y}px;
+                `;
+
+                document.body.appendChild(particle);
+
+                const angle = (Math.PI * 2 * i) / 20;
+                const velocity = Math.random() * 100 + 50;
+
+                particle.animate([
+                    { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+                    {
+                        transform: `translate(${Math.cos(angle) * velocity}px, ${Math.sin(angle) * velocity}px) scale(0)`,
+                        opacity: 0
+                    }
+                ], {
+                    duration: 1000,
+                    easing: 'cubic-bezier(0.25, 0.46, 0.45, 0.94)'
+                }).onfinish = () => particle.remove();
+            }
+        }
+
+        // 🌊 Efecto de onda épica al hacer scroll
+        function createScrollWave() {
+            const wave = document.createElement('div');
+            wave.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                background: radial-gradient(circle at 50% 50%, 
+                    rgba(212, 175, 55, 0.15) 0%, 
+                    rgba(255, 215, 0, 0.1) 30%,
+                    rgba(138, 43, 226, 0.05) 60%,
+                    transparent 80%);
+                pointer-events: none;
+                z-index: 1000;
+                animation: epic-wave-pulse 1.2s ease-out;
+            `;
+            document.body.appendChild(wave);
+            setTimeout(() => wave.remove(), 1200);
+        }
+
+        // 🎭 Efectos de cursor mágico
+        function createMagicCursor() {
+            const cursor = document.createElement('div');
+            cursor.style.cssText = `
+                position: fixed;
+                width: 20px;
+                height: 20px;
+                background: radial-gradient(circle, #d4af37, transparent);
+                border-radius: 50%;
+                pointer-events: none;
+                z-index: 9999;
+                mix-blend-mode: screen;
+                transition: transform 0.1s ease;
+            `;
+            document.body.appendChild(cursor);
+
+            document.addEventListener('mousemove', (e) => {
+                cursor.style.left = e.clientX - 10 + 'px';
+                cursor.style.top = e.clientY - 10 + 'px';
+            });
+
+            // Rastro del cursor
+            document.addEventListener('mousemove', (e) => {
+                const trail = document.createElement('div');
+                trail.style.cssText = `
+                    position: fixed;
+                    width: 4px;
+                    height: 4px;
+                    background: #d4af37;
+                    border-radius: 50%;
+                    pointer-events: none;
+                    z-index: 9998;
+                    left: ${e.clientX - 2}px;
+                    top: ${e.clientY - 2}px;
+                    animation: trail-fade 0.5s ease-out forwards;
+                `;
+                document.body.appendChild(trail);
+                setTimeout(() => trail.remove(), 500);
+            });
+        }
+
+        // 🎨 Cambio de colores épico en las cartas
+        function animateCards() {
+            const cards = document.querySelectorAll('.game-card, .showcase-card');
+
+            cards.forEach((card, index) => {
+                // Efecto de pulsación sutil
+                setInterval(() => {
+                    const colors = ['#d4af37', '#ffd700', '#ffcc00', '#f4d03f'];
+                    const randomColor = colors[Math.floor(Math.random() * colors.length)];
+                    card.style.borderColor = randomColor;
+                    card.style.boxShadow = `0 8px 25px ${randomColor}40`;
+                }, 3000 + index * 800);
+
+                // Animación de flotación
+                card.style.animation = `float ${3 + index * 0.5}s ease-in-out infinite`;
+            });
+        }
+
+        // 🚀 Efectos al hacer hover en elementos
+        function addHoverEffects() {
+            const hoverElements = document.querySelectorAll('.cta-button, .showcase-card, .game-card');
+
+            hoverElements.forEach(element => {
+                element.addEventListener('mouseenter', () => {
+                    element.style.transform = 'scale(1.05) rotate(2deg)';
+                    element.style.filter = 'drop-shadow(0 10px 20px rgba(212, 175, 55, 0.5))';
                 });
 
-                const box = new THREE.Box3().setFromObject(model);
-                const size = box.getSize(new THREE.Vector3());
-                const center = box.getCenter(new THREE.Vector3());
-
-                // centrar al origen
-                model.position.sub(center);
-
-                // escalar a tamaño objetivo
-                const diag = size.length() || 1;
-                const k = TARGET_SIZE / diag;
-                model.scale.setScalar(k);
-
-                // orientación base: ESPALDA
-                model.rotation.y = BACK_ANGLE;
-
-                scene.add(model);
-
-                // baseY = 0; (ya está en 0 tras centrar)
-                baseY = 0;
-
-                // cámara según tamaño
-                const r = TARGET_SIZE * 2.2;
-                camera.position.set(0, r * 0.35, r);
-                camera.near = 0.01; camera.far = 10000; camera.updateProjectionMatrix();
-
-                statusEl.innerHTML = '✅ Modelo cargado • Movimiento visual activado';
-            }, (p) => {
-                if (p.total) statusEl.textContent = `Cargando: ${Math.round(p.loaded / p.total * 100)}%`;
-            }, (err) => {
-                console.error('No se pudo cargar jijij.glb', err);
-                statusEl.textContent = '❌ No se pudo cargar jijij.glb. Se muestra un cubo.';
-                model = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 3), new THREE.MeshLambertMaterial({ color: 0x00ff88 }));
-                model.rotation.y = BACK_ANGLE;
-                scene.add(model);
+                element.addEventListener('mouseleave', () => {
+                    element.style.transform = 'scale(1) rotate(0deg)';
+                    element.style.filter = 'none';
+                });
             });
+        }
 
-            // ====== Entradas ======
-            const setKey = (c, v) => keys[c] = v;
-            addEventListener('keydown', e => {
-                setKey(e.code, true);
-                if (e.code === 'Space' && !jumping) { jumping = true; jumpSpeed = 0.5; e.preventDefault(); }
-            });
-            addEventListener('keyup', e => setKey(e.code, false));
+        // ⚡ Texto que cambia automáticamente
+        function dynamicText() {
+            const subtitle = document.querySelector('.game-subtitle');
+            const texts = [
+                'WOMEN GAME JAM',
+                'JUEGO MAGICO',
+                'PIERDETE EN LAS HISTORIAS',
+                'NADA ES LO QUE PARECE'
+            ];
 
-            function bindHoldButton(el, code, isJump = false) {
-                const press = ev => { ev.preventDefault(); setKey(code, true); if (isJump && !jumping) { jumping = true; jumpSpeed = 0.5; } };
-                const rel = ev => { ev.preventDefault(); setKey(code, false); };
-                el.addEventListener('mousedown', press); document.addEventListener('mouseup', rel);
-                el.addEventListener('touchstart', press, { passive: false }); el.addEventListener('touchend', rel);
-                el.addEventListener('pointerdown', press); el.addEventListener('pointerup', rel); el.addEventListener('pointercancel', rel);
-                el.addEventListener('contextmenu', e => e.preventDefault());
-            }
-            document.querySelectorAll('.btn[data-key]').forEach(b => {
-                const code = b.getAttribute('data-key'); bindHoldButton(b, code, code === 'Space');
-            });
+            let currentIndex = 0;
+            setInterval(() => {
+                subtitle.style.opacity = '0';
+                setTimeout(() => {
+                    currentIndex = (currentIndex + 1) % texts.length;
+                    subtitle.textContent = texts[currentIndex];
+                    subtitle.style.opacity = '1';
+                }, 300);
+            }, 3000);
+        }
 
-            // órbita simple
-            let md = false, mx = 0, my = 0;
-            renderer.domElement.addEventListener('mousedown', e => { md = true; mx = e.clientX; my = e.clientY; });
-            addEventListener('mouseup', () => md = false);
-            renderer.domElement.addEventListener('mousemove', e => {
-                if (!md) return;
-                camAY += (e.clientX - mx) * 0.01; camAX += (e.clientY - my) * 0.01; mx = e.clientX; my = e.clientY;
-            });
-            renderer.domElement.addEventListener('wheel', e => {
-                camera.position.z += e.deltaY * 0.02;
-                camera.position.z = Math.max(3, Math.min(25, camera.position.z));
-            }, { passive: true });
+        // 🌟 Efecto de matriz en el fondo
+        function createMatrixEffect() {
+            const matrix = document.createElement('canvas');
+            matrix.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                pointer-events: none;
+                z-index: 1;
+                opacity: 0.1;
+            `;
+            document.body.appendChild(matrix);
 
-            // ====== Movimiento + ilusiones ======
-            const clock = new THREE.Clock();
-            function moveEverything(dt) {
-                if (!model) return;
+            const ctx = matrix.getContext('2d');
+            matrix.width = window.innerWidth;
+            matrix.height = window.innerHeight;
 
-                // velocidad base
-                const speed = 3.0 * dt;
+            const chars = '🧙‍♀️🔮⚡🐉🏰✨💫🌟';
+            const charArray = chars.split('');
+            const columns = matrix.width / 20;
+            const drops = Array(Math.floor(columns)).fill(1);
 
-                const movingForward = keys['KeyW'] || keys['ArrowUp'];
-                const movingBackward = keys['KeyS'] || keys['ArrowDown'];
-                const movingLeft = keys['KeyA'] || keys['ArrowLeft'];
-                const movingRight = keys['KeyD'] || keys['ArrowRight'];
+            function drawMatrix() {
+                ctx.fillStyle = 'rgba(13, 40, 24, 0.05)';
+                ctx.fillRect(0, 0, matrix.width, matrix.height);
 
-                // traslación
-                if (movingForward) modelZ -= speed;
-                if (movingBackward) modelZ += speed;
-                if (movingLeft) { modelX -= speed; lastMoveDir = -1; }
-                if (movingRight) { modelX += speed; lastMoveDir = 1; }
-                if (!movingLeft && !movingRight) lastMoveDir = 0;
+                ctx.fillStyle = '#d4af37';
+                ctx.font = '15px Arial';
 
-                // salto
-                if (jumping) {
-                    jumpSpeed -= 1.6 * dt; modelY += jumpSpeed;
-                    if (modelY <= 0) { modelY = 0; jumping = false; jumpSpeed = 0; }
+                for (let i = 0; i < drops.length; i++) {
+                    const text = charArray[Math.floor(Math.random() * charArray.length)];
+                    ctx.fillText(text, i * 20, drops[i] * 20);
+
+                    if (drops[i] * 20 > matrix.height && Math.random() > 0.975) {
+                        drops[i] = 0;
+                    }
+                    drops[i]++;
                 }
-
-                // “head-bob” solo si te mueves (WASD)
-                const isMoving = movingForward || movingBackward || movingLeft || movingRight;
-                if (isMoving && !jumping) {
-                    walkPhase += dt * WALK_BOB_FREQ * Math.PI * 2;
-                    model.position.y = baseY + WALK_BOB_AMP * Math.sin(walkPhase);
-                } else if (!jumping) {
-                    // vuelve suave a altura base
-                    model.position.y += (baseY - model.position.y) * Math.min(1, dt * 10);
-                }
-
-                // aplicar X/Z y Y final (por si no hubo bob)
-                model.position.x = modelX;
-                model.position.z = modelZ;
-                if (!isMoving && !jumping) model.position.y = baseY;
-
-                // orientación exacta (espalda adelante/atrás; perfiles en izquierda/derecha)
-                if (movingForward || movingBackward) {
-                    model.rotation.y = BACK_ANGLE;
-                } else if (lastMoveDir !== 0) {
-                    model.rotation.y = (lastMoveDir > 0) ? (BACK_ANGLE + Math.PI / 2) : (BACK_ANGLE - Math.PI / 2);
-                }
-
-                // Shadow blob sigue al modelo y se atenúa al saltar
-                shadow.position.x = modelX;
-                shadow.position.z = modelZ;
-                shadow.material.opacity = 0.25 * (1 - Math.min(1, modelY * 0.6));
-
-                // Cámara follow + órbita
-                const dist = 8;
-                const target = new THREE.Vector3(
-                    modelX + Math.sin(camAY) * dist,
-                    modelY + 5 + Math.sin(camAX) * 3,
-                    modelZ + Math.cos(camAY) * dist
-                );
-                camera.position.lerp(target, 0.15);
-                camera.lookAt(modelX, modelY + 1, modelZ);
-
-                // Partículas: mover en sentido contrario al input para simular aire
-                const vx = (movingRight ? 1 : 0) - (movingLeft ? 1 : 0);
-                const vz = (movingBackward ? 1 : 0) - (movingForward ? 1 : 0);
-                const vlen = Math.hypot(vx, vz) || 1;
-                const fx = (vx / vlen) * 12 * dt; // factor velocidad partículas
-                const fz = (vz / vlen) * 12 * dt;
-
-                const arr = dust.geometry.attributes.position.array;
-                for (let i = 0; i < DUST_COUNT; i++) {
-                    const i3 = i * 3;
-                    // mover
-                    arr[i3 + 0] -= fx;
-                    arr[i3 + 2] -= fz;
-                    // envolver en caja
-                    if (arr[i3 + 0] < -DUST_BOX) arr[i3 + 0] += 2 * DUST_BOX;
-                    if (arr[i3 + 0] > DUST_BOX) arr[i3 + 0] -= 2 * DUST_BOX;
-                    if (arr[i3 + 2] < -DUST_BOX) arr[i3 + 2] += 2 * DUST_BOX;
-                    if (arr[i3 + 2] > DUST_BOX) arr[i3 + 2] -= 2 * DUST_BOX;
-                }
-                dust.geometry.attributes.position.needsUpdate = true;
-
-                // Coloca el “campo” de partículas centrado en el jugador
-                dust.position.set(modelX, 0, modelZ);
             }
 
-            // Loop + FPS
-            let acc = 0, frames = 0;
-            function animate() {
-                requestAnimationFrame(animate);
-                const dt = clock.getDelta();
-                moveEverything(dt);
-                renderer.render(scene, camera);
-                acc += dt; frames++; if (acc >= 0.5) { fpsEl.textContent = 'FPS: ' + Math.round(frames / acc); acc = 0; frames = 0; }
-            }
-            animate();
+            setInterval(drawMatrix, 100);
+        }
 
-            // Resize
-            addEventListener('resize', () => {
-                camera.aspect = innerWidth / innerHeight;
-                camera.updateProjectionMatrix();
-                renderer.setSize(innerWidth, innerHeight);
+        // 🎵 Añadir CSS animations dinámicas
+        function addAnimations() {
+            const style = document.createElement('style');
+            style.textContent = `
+                @keyframes enhanced-float {
+                    0%, 100% { 
+                        transform: translateY(0px) rotate(0deg) scale(1); 
+                        opacity: 0.3; 
+                    }
+                    25% { 
+                        transform: translateY(-40px) rotate(90deg) scale(1.2); 
+                        opacity: 1; 
+                    }
+                    50% { 
+                        transform: translateY(-20px) rotate(180deg) scale(0.8); 
+                        opacity: 0.7; 
+                    }
+                    75% { 
+                        transform: translateY(-35px) rotate(270deg) scale(1.1); 
+                        opacity: 1; 
+                    }
+                }
+                
+                @keyframes shake {
+                    0%, 100% { transform: translateX(0); }
+                    25% { transform: translateX(-5px); }
+                    75% { transform: translateX(5px); }
+                }
+                
+                @keyframes image-3d-float {
+                    0%, 100% { 
+                        transform: perspective(1000px) rotateY(-5deg) rotateX(2deg) translateZ(0px);
+                        box-shadow: 
+                            0 20px 50px rgba(0, 0, 0, 0.8),
+                            0 0 100px rgba(212, 175, 55, 0.3),
+                            inset 0 0 100px rgba(0, 0, 0, 0.2);
+                    }
+                    50% { 
+                        transform: perspective(1000px) rotateY(-3deg) rotateX(1deg) translateZ(20px);
+                        box-shadow: 
+                            0 30px 70px rgba(0, 0, 0, 0.9),
+                            0 0 120px rgba(255, 215, 0, 0.5),
+                            inset 0 0 120px rgba(0, 0, 0, 0.1);
+                    }
+                }
+                
+                @keyframes trail-fade {
+                    0% { opacity: 1; transform: scale(1); }
+                    100% { opacity: 0; transform: scale(0); }
+                }
+                
+                @keyframes epic-glow {
+                    0% { 
+                        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.5);
+                        filter: brightness(1);
+                    }
+                    50% { 
+                        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8), 0 0 40px rgba(255, 215, 0, 0.8), 0 0 60px rgba(212, 175, 55, 0.6);
+                        filter: brightness(1.2);
+                    }
+                    100% { 
+                        text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.5);
+                        filter: brightness(1);
+                    }
+                }
+                
+                @keyframes card-shine {
+                    0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); }
+                    100% { transform: translateX(100%) translateY(100%) rotate(45deg); }
+                }
+                
+                @keyframes border-rotate {
+                    0% { transform: rotate(0deg); }
+                    100% { transform: rotate(360deg); }
+                }
+                
+                .showcase-card {
+                    transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+                }
+            `;
+            document.head.appendChild(style);
+        }
+
+        // 🎆 INICIALIZAR TODOS LOS EFECTOS
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log('🚀 Iniciando efectos mágicos...');
+
+            // Efectos inmediatos
+            addAnimations();
+            createMagicParticles();
+            createMatrixEffect();
+            createMagicCursor();
+            addHoverEffects();
+            animateCards();
+            dynamicText();
+
+            // Efecto de typing después de 1 segundo
+            setTimeout(typewriterEffect, 1000);
+
+            // Explosiones en botones
+            document.querySelectorAll('button').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    const rect = btn.getBoundingClientRect();
+                    createExplosion(
+                        rect.left + rect.width / 2,
+                        rect.top + rect.height / 2
+                    );
+                });
             });
-        })();
+
+            // Onda en scroll
+            window.addEventListener('scroll', createScrollWave);
+
+            console.log('✨ ¡Efectos mágicos activados!');
+        });
+
+        // Smooth scrolling
+        document.querySelectorAll('a[href^="#"]').forEach(anchor => {
+            anchor.addEventListener('click', function (e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth'
+                    });
+                }
+            });
+        });
+
+        // Form submission con efectos
+        document.querySelector('.signup-form').addEventListener('submit', function (e) {
+            e.preventDefault();
+            const email = this.querySelector('.email-input').value;
+            if (email) {
+                // Crear explosión épica
+                const rect = this.getBoundingClientRect();
+                createExplosion(rect.left + rect.width / 2, rect.top + rect.height / 2);
+
+                // Mensaje con estilo
+                setTimeout(() => {
+                    alert('🎉 ¡ÉPICO! Te contactaremos pronto para la beta mágica.');
+                    this.reset();
+                }, 500);
+            }
+        });
+
+        // Parallax effect mejorado
+        window.addEventListener('scroll', () => {
+            const scrolled = window.pageYOffset;
+            const parallax = document.querySelector('.hero-background');
+            if (parallax) {
+                const speed = scrolled * 0.5;
+                parallax.style.transform = `translateY(${speed}px) scale(${1 + scrolled * 0.0005})`;
+            }
+        });
     </script>
 </body>
 

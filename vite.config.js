@@ -5,7 +5,7 @@ import { resolve } from 'path'
 export default defineConfig({
     server: {
         // Abre directamente la portada en /bruja
-        open: '/bruja/inicio.html',
+        open: '/bruja/index.html',
         // (opcional) permite abrir desde otras máquinas en la red
         // host: true
     },
@@ -14,7 +14,7 @@ export default defineConfig({
             input: {
                 // multipágina: declara ambas entradas para build
                 juego: resolve(__dirname, 'index.html'),
-                inicio: resolve(__dirname, 'bruja/inicio.html'),
+                inicio: resolve(__dirname, 'bruja/index.html'),
             }
         }
     }

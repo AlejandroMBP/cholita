@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="utf-8" />
+    <title>CHOLITA 3D - Movimiento Visual sin Piso</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <style>
+        :root {
+            --glass: rgba(255, 255, 255, .12);
+            --glass2: rgba(255, 255, 255, .18);
+        }
+
+        html,
+        body {
+            height: 100%;
+            margin: 0;
+        }
+
+        body {
+            background: radial-gradient(1200px 600px at 50% 60%, #0f2033 0%, #081423 60%, #040a15 100%);
+            overflow: hidden;
+            font-family: Arial, system-ui;
+        }
+
+        canvas {
+            display: block;
+        }
+
+        #info {
+            position: fixed;
+            left: 12px;
+            top: 12px;
+            z-index: 100;
+            color: #fff;
+            padding: 12px 14px;
+            border-radius: 10px;
+            background: rgba(0, 0, 0, .55);
+            line-height: 1.35;
+            font-size: 14px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, .25);
+            user-select: none;
+        }
+
+        #status {
+            margin-top: 6px;
+            opacity: .9
+        }
+
+        #pad {
+            position: fixed;
+            left: 16px;
+            bottom: 16px;
+            z-index: 100;
+            display: grid;
+            gap: 8px;
+        }
+
+        #pad .row {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+        }
+
+        .btn {
+            width: 56px;
+            height: 56px;
+            border-radius: 12px;
+            border: 1px solid rgba(255, 255, 255, .25);
+            background: var(--glass);
+            color: #fff;
+            font-size: 20px;
+            font-weight: 700;
+            backdrop-filter: blur(6px);
+            -webkit-backdrop-filter: blur(6px);
+            user-select: none;
+            -webkit-user-select: none;
+            touch-action: none;
+            cursor: pointer;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, .08), 0 4px 16px rgba(0, 0, 0, .25);
+        }
+
+        .btn:active {
+            transform: scale(.96);
+            background: var(--glass2);
+        }
+
+        #jump {
+            position: fixed;
+            right: 16px;
+            bottom: 28px;
+            z-index: 100;
+            width: 110px;
+            height: 56px;
+            letter-spacing: .5px;
+            font-size: 14px;
+        }
+
+        #fps {
+            position: fixed;
+            right: 16px;
+            top: 12px;
+            z-index: 100;
+            color: #fff;
+            opacity: .8;
+            font-size: 12px;
+            background: rgba(0, 0, 0, .45);
+            padding: 6px 8px;
+            border-radius: 8px;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="info">
+        🧙‍♀️ <strong>BRUJA 3D</strong><br>
+        <small>WASD / ↑↓←→ mover • Espacio saltar • Arrastra para orbitar • Rueda zoom</small>
+        <div id="status">Cargando...</div>
+    </div>
+
+    <div id="pad">
+        <div class="row"><button class="btn" data-key="KeyW">▲</button></div>
+        <div class="row">
+            <button class="btn" data-key="KeyA">◀</button>
+            <button class="btn" data-key="KeyS">▼</button>
+            <button class="btn" data-key="KeyD">▶</button>
+        </div>
+    </div>
+    <button id="jump" class="btn" data-key="Space">SALTAR</button>
+
+    <div id="fps">FPS: —</div>
+
+    <!-- Three r128 + GLTFLoader -->
+    <script src="https://unpkg.com/three@0.128.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.128.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <script>
+        (function () {
+            const statusEl = document.getElementById('status');
+            const fpsEl = document.getElementById('fps');
+
+            // ====== CONFIG ======
+            const TARGET_SIZE = 8.0;     // tamaño objetivo del modelo (grande)
+            const BACK_ANGLE = 0;       // si su “espalda” no coincide, prueba Math.PI / ±Math.PI/2
+            const WALK_BOB_AMP = 0.08;    // amplitud de bob
+            const WALK_BOB_FREQ = 6.5;     // frecuencia de bob (Hz aprox)
+            const DUST_COUNT = 800;     // cantidad de partículas
+            const DUST_BOX = 30;      // tamaño del área de partículas
+
+            // ====== Escena/cámara/render ======
+            const scene = new THREE.Scene();
+            const camera = new THREE.PerspectiveCamera(75, innerWidth / innerHeight, 0.01, 10000);
+            camera.position.set(0, 5, 10);
+
+            const renderer = new THREE.WebGLRenderer({ antialias: true });
+            renderer.outputEncoding = THREE.sRGBEncoding;
+            renderer.setSize(innerWidth, innerHeight);
+            document.body.appendChild(renderer.domElement);
+
+            // Luces
+            scene.add(new THREE.AmbientLight(0xffffff, 0.9));
+            const dir = new THREE.DirectionalLight(0xffffff, 1.0);
+            dir.position.set(8, 12, 8);
+            scene.add(dir);
+
+            // ====== Estado ======
+            const keys = {};
+            let model = null;
+            let baseY = 0;               // altura base (para bob + salto)
+            let modelX = 0, modelY = 0, modelZ = 0;
+            let jumping = false, jumpSpeed = 0;
+            let camAX = 0, camAY = 0;    // órbita manual
+            let walkPhase = 0;           // fase del bob
+            let lastMoveDir = 0;         // -1 izquierda, +1 derecha, 0 ninguno (para perfil)
+
+            // ====== Partículas (polvo) ======
+            const dustGeom = new THREE.BufferGeometry();
+            const dustPos = new Float32Array(DUST_COUNT * 3);
+            for (let i = 0; i < DUST_COUNT; i++) {
+                dustPos[i * 3 + 0] = (Math.random() * 2 - 1) * DUST_BOX;   // x
+                dustPos[i * 3 + 1] = Math.random() * 4 + 0.2;         // y
+                dustPos[i * 3 + 2] = (Math.random() * 2 - 1) * DUST_BOX;   // z
+            }
+            dustGeom.setAttribute('position', new THREE.BufferAttribute(dustPos, 3));
+            const dustMat = new THREE.PointsMaterial({ size: 0.06, transparent: true, opacity: 0.55, depthWrite: false });
+            const dust = new THREE.Points(dustGeom, dustMat);
+            scene.add(dust);
+
+            // ====== Shadow Blob (sombra suave bajo los pies) ======
+            function makeShadowTexture(size = 256) {
+                const c = document.createElement('canvas'); c.width = c.height = size;
+                const ctx = c.getContext('2d');
+                const g = ctx.createRadialGradient(size / 2, size / 2, 10, size / 2, size / 2, size / 2);
+                g.addColorStop(0, 'rgba(0,0,0,0.25)');
+                g.addColorStop(1, 'rgba(0,0,0,0.0)');
+                ctx.fillStyle = g; ctx.fillRect(0, 0, size, size);
+                return new THREE.CanvasTexture(c);
+            }
+            const shadowTex = makeShadowTexture();
+            const shadow = new THREE.Mesh(
+                new THREE.PlaneGeometry(4.5, 4.5),
+                new THREE.MeshBasicMaterial({ map: shadowTex, transparent: true, depthWrite: false })
+            );
+            shadow.rotation.x = -Math.PI / 2;
+            shadow.position.y = 0.001;
+            scene.add(shadow);
+
+            // ====== Cargar GLB y auto-centrar/escala ======
+            const loader = new THREE.GLTFLoader();
+            loader.load('./jijij.glb', (gltf) => {
+                model = gltf.scene;
+
+                model.traverse(n => {
+                    if (n.isMesh && !n.material) {
+                        n.material = new THREE.MeshStandardMaterial({ color: 0xbba37a, roughness: 0.7, metalness: 0.0 });
+                    }
+                    if (n.isMesh) { n.castShadow = true; n.receiveShadow = true; }
+                });
+
+                const box = new THREE.Box3().setFromObject(model);
+                const size = box.getSize(new THREE.Vector3());
+                const center = box.getCenter(new THREE.Vector3());
+
+                // centrar al origen
+                model.position.sub(center);
+
+                // escalar a tamaño objetivo
+                const diag = size.length() || 1;
+                const k = TARGET_SIZE / diag;
+                model.scale.setScalar(k);
+
+                // orientación base: ESPALDA
+                model.rotation.y = BACK_ANGLE;
+
+                scene.add(model);
+
+                // baseY = 0; (ya está en 0 tras centrar)
+                baseY = 0;
+
+                // cámara según tamaño
+                const r = TARGET_SIZE * 2.2;
+                camera.position.set(0, r * 0.35, r);
+                camera.near = 0.01; camera.far = 10000; camera.updateProjectionMatrix();
+
+                statusEl.innerHTML = '✅ Modelo cargado • Movimiento visual activado';
+            }, (p) => {
+                if (p.total) statusEl.textContent = `Cargando: ${Math.round(p.loaded / p.total * 100)}%`;
+            }, (err) => {
+                console.error('No se pudo cargar jijij.glb', err);
+                statusEl.textContent = '❌ No se pudo cargar jijij.glb. Se muestra un cubo.';
+                model = new THREE.Mesh(new THREE.BoxGeometry(3, 3, 3), new THREE.MeshLambertMaterial({ color: 0x00ff88 }));
+                model.rotation.y = BACK_ANGLE;
+                scene.add(model);
+            });
+
+            // ====== Entradas ======
+            const setKey = (c, v) => keys[c] = v;
+            addEventListener('keydown', e => {
+                setKey(e.code, true);
+                if (e.code === 'Space' && !jumping) { jumping = true; jumpSpeed = 0.5; e.preventDefault(); }
+            });
+            addEventListener('keyup', e => setKey(e.code, false));
+
+            function bindHoldButton(el, code, isJump = false) {
+                const press = ev => { ev.preventDefault(); setKey(code, true); if (isJump && !jumping) { jumping = true; jumpSpeed = 0.5; } };
+                const rel = ev => { ev.preventDefault(); setKey(code, false); };
+                el.addEventListener('mousedown', press); document.addEventListener('mouseup', rel);
+                el.addEventListener('touchstart', press, { passive: false }); el.addEventListener('touchend', rel);
+                el.addEventListener('pointerdown', press); el.addEventListener('pointerup', rel); el.addEventListener('pointercancel', rel);
+                el.addEventListener('contextmenu', e => e.preventDefault());
+            }
+            document.querySelectorAll('.btn[data-key]').forEach(b => {
+                const code = b.getAttribute('data-key'); bindHoldButton(b, code, code === 'Space');
+            });
+
+            // órbita simple
+            let md = false, mx = 0, my = 0;
+            renderer.domElement.addEventListener('mousedown', e => { md = true; mx = e.clientX; my = e.clientY; });
+            addEventListener('mouseup', () => md = false);
+            renderer.domElement.addEventListener('mousemove', e => {
+                if (!md) return;
+                camAY += (e.clientX - mx) * 0.01; camAX += (e.clientY - my) * 0.01; mx = e.clientX; my = e.clientY;
+            });
+            renderer.domElement.addEventListener('wheel', e => {
+                camera.position.z += e.deltaY * 0.02;
+                camera.position.z = Math.max(3, Math.min(25, camera.position.z));
+            }, { passive: true });
+
+            // ====== Movimiento + ilusiones ======
+            const clock = new THREE.Clock();
+            function moveEverything(dt) {
+                if (!model) return;
+
+                // velocidad base
+                const speed = 3.0 * dt;
+
+                const movingForward = keys['KeyW'] || keys['ArrowUp'];
+                const movingBackward = keys['KeyS'] || keys['ArrowDown'];
+                const movingLeft = keys['KeyA'] || keys['ArrowLeft'];
+                const movingRight = keys['KeyD'] || keys['ArrowRight'];
+
+                // traslación
+                if (movingForward) modelZ -= speed;
+                if (movingBackward) modelZ += speed;
+                if (movingLeft) { modelX -= speed; lastMoveDir = -1; }
+                if (movingRight) { modelX += speed; lastMoveDir = 1; }
+                if (!movingLeft && !movingRight) lastMoveDir = 0;
+
+                // salto
+                if (jumping) {
+                    jumpSpeed -= 1.6 * dt; modelY += jumpSpeed;
+                    if (modelY <= 0) { modelY = 0; jumping = false; jumpSpeed = 0; }
+                }
+
+                // “head-bob” solo si te mueves (WASD)
+                const isMoving = movingForward || movingBackward || movingLeft || movingRight;
+                if (isMoving && !jumping) {
+                    walkPhase += dt * WALK_BOB_FREQ * Math.PI * 2;
+                    model.position.y = baseY + WALK_BOB_AMP * Math.sin(walkPhase);
+                } else if (!jumping) {
+                    // vuelve suave a altura base
+                    model.position.y += (baseY - model.position.y) * Math.min(1, dt * 10);
+                }
+
+                // aplicar X/Z y Y final (por si no hubo bob)
+                model.position.x = modelX;
+                model.position.z = modelZ;
+                if (!isMoving && !jumping) model.position.y = baseY;
+
+                // orientación exacta (espalda adelante/atrás; perfiles en izquierda/derecha)
+                if (movingForward || movingBackward) {
+                    model.rotation.y = BACK_ANGLE;
+                } else if (lastMoveDir !== 0) {
+                    model.rotation.y = (lastMoveDir > 0) ? (BACK_ANGLE + Math.PI / 2) : (BACK_ANGLE - Math.PI / 2);
+                }
+
+                // Shadow blob sigue al modelo y se atenúa al saltar
+                shadow.position.x = modelX;
+                shadow.position.z = modelZ;
+                shadow.material.opacity = 0.25 * (1 - Math.min(1, modelY * 0.6));
+
+                // Cámara follow + órbita
+                const dist = 8;
+                const target = new THREE.Vector3(
+                    modelX + Math.sin(camAY) * dist,
+                    modelY + 5 + Math.sin(camAX) * 3,
+                    modelZ + Math.cos(camAY) * dist
+                );
+                camera.position.lerp(target, 0.15);
+                camera.lookAt(modelX, modelY + 1, modelZ);
+
+                // Partículas: mover en sentido contrario al input para simular aire
+                const vx = (movingRight ? 1 : 0) - (movingLeft ? 1 : 0);
+                const vz = (movingBackward ? 1 : 0) - (movingForward ? 1 : 0);
+                const vlen = Math.hypot(vx, vz) || 1;
+                const fx = (vx / vlen) * 12 * dt; // factor velocidad partículas
+                const fz = (vz / vlen) * 12 * dt;
+
+                const arr = dust.geometry.attributes.position.array;
+                for (let i = 0; i < DUST_COUNT; i++) {
+                    const i3 = i * 3;
+                    // mover
+                    arr[i3 + 0] -= fx;
+                    arr[i3 + 2] -= fz;
+                    // envolver en caja
+                    if (arr[i3 + 0] < -DUST_BOX) arr[i3 + 0] += 2 * DUST_BOX;
+                    if (arr[i3 + 0] > DUST_BOX) arr[i3 + 0] -= 2 * DUST_BOX;
+                    if (arr[i3 + 2] < -DUST_BOX) arr[i3 + 2] += 2 * DUST_BOX;
+                    if (arr[i3 + 2] > DUST_BOX) arr[i3 + 2] -= 2 * DUST_BOX;
+                }
+                dust.geometry.attributes.position.needsUpdate = true;
+
+                // Coloca el “campo” de partículas centrado en el jugador
+                dust.position.set(modelX, 0, modelZ);
+            }
+
+            // Loop + FPS
+            let acc = 0, frames = 0;
+            function animate() {
+                requestAnimationFrame(animate);
+                const dt = clock.getDelta();
+                moveEverything(dt);
+                renderer.render(scene, camera);
+                acc += dt; frames++; if (acc >= 0.5) { fpsEl.textContent = 'FPS: ' + Math.round(frames / acc); acc = 0; frames = 0; }
+            }
+            animate();
+
+            // Resize
+            addEventListener('resize', () => {
+                camera.aspect = innerWidth / innerHeight;
+                camera.updateProjectionMatrix();
+                renderer.setSize(innerWidth, innerHeight);
+            });
+        })();
+    </script>
+</body>
+
+</html>
