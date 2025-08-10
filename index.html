@@ -67,7 +67,15 @@
       }, 1000); // Tiempo antes de iniciar la transición
     });
   </script>
+  <script>
+    const url = new URL(location.href);
+    const play = url.searchParams.get('play');
 
+    // Si NO viene desde el botón (sin ?play=1) o si la ruta es la raíz, redirige al inicio
+    if (play !== '1') {
+      location.replace('/bruja/index.html');
+    }
+  </script>
 
 
 </body>
