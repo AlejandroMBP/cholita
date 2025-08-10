@@ -48,6 +48,9 @@ export default class Level1Scene {
         this.bg = new Image(); this.bgLoaded = false; this.bg.onload = () => this.bgLoaded = true; this.bg.src = fondoImgSrc;
         this.casas = new Image(); this.casasLoaded = false; this.casas.onload = () => this.casasLoaded = true; this.casas.src = casasImgSrc;
 
+        // Transición de bruja
+        this._initWitchTransition();
+
         // Overlay / hints
         this._buildOverlay();
         this.overlayOpen = false;
@@ -56,11 +59,18 @@ export default class Level1Scene {
     }
 
     init() { }
+
     destroy() {
         if (this.overlay && this.overlay.parentNode) this.overlay.parentNode.removeChild(this.overlay);
         this.overlay = null;
         if (this._hintEl && this._hintEl.parentNode) this._hintEl.parentNode.removeChild(this._hintEl);
         this._hintEl = null;
+        if (this._witchOverlay && this._witchOverlay.parentNode) this._witchOverlay.parentNode.removeChild(this._witchOverlay);
+        this._witchOverlay = null;
+        if (this._witchAudio) {
+            this._witchAudio.pause();
+            this._witchAudio = null;
+        }
     }
 
     groundY = () => this.canvas.height - this.GROUND_MARGIN;
@@ -201,6 +211,206 @@ export default class Level1Scene {
         this.cholita.draw(ctx, this.camera.x);
     }
 
+    /* === Transición de Bruja === */
+    _initWitchTransition() {
+        this._witchAudio = new Audio();
+        this._witchAudio.src = '/bruja/risabruja.ogg'; // ruta pública
+        this._witchAudio.loop = false;
+        this._witchAudio.volume = 0.8;
+
+        this._createWitchOverlay();
+    }
+
+
+    _createWitchOverlay() {
+        const overlay = document.createElement('div');
+        overlay.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at center, #1a0d1a, #000);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 10000;
+            pointer-events: none;
+        `;
+
+        // Contenedor de la bruja
+        const witchContainer = document.createElement('div');
+        witchContainer.style.cssText = `
+            position: relative;
+            max-width: 60vw;
+            max-height: 70vh;
+            filter: drop-shadow(0 0 30px #ff0066) contrast(1.2) brightness(0.9);
+            animation: witchFloat 2s ease-in-out infinite, witchPulse 1s ease-in-out infinite alternate;
+        `;
+
+        // Imagen de la bruja
+        const witchImg = document.createElement('img');
+        witchImg.src = '/bruja/bru.jpg.png';
+        witchImg.style.cssText = `
+            width: 100%;
+            height: auto;
+            object-fit: contain;
+        `;
+
+        // Texto inquietante
+        const scaryText = document.createElement('div');
+        scaryText.textContent = 'LA PUERTA SE ABRE...';
+        scaryText.style.cssText = `
+            position: absolute;
+            top: 10%;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ff0066;
+            font-size: clamp(24px, 4vw, 48px);
+            text-shadow: 0 0 20px #ff0066, 0 0 40px #ff0066;
+            text-align: center;
+            font-family: 'Creepster', cursive;
+            letter-spacing: 3px;
+            opacity: 0;
+            animation: textAppear 1s ease-in-out 0.5s forwards;
+        `;
+
+        // Efectos de partículas
+        const particlesContainer = document.createElement('div');
+        particlesContainer.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        `;
+
+        // Flash de rayo
+        const lightning = document.createElement('div');
+        lightning.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(255, 255, 255, 0);
+            pointer-events: none;
+        `;
+
+        // Ensamblar overlay
+        witchContainer.appendChild(witchImg);
+        overlay.appendChild(witchContainer);
+        overlay.appendChild(scaryText);
+        overlay.appendChild(particlesContainer);
+        overlay.appendChild(lightning);
+
+        // Agregar estilos de animación
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes witchFloat {
+                0%, 100% { transform: translateY(0px) rotate(0deg); }
+                50% { transform: translateY(-20px) rotate(2deg); }
+            }
+            
+            @keyframes witchPulse {
+                0% { filter: drop-shadow(0 0 30px #ff0066) contrast(1.2) brightness(0.9); }
+                100% { filter: drop-shadow(0 0 50px #ff0066) contrast(1.4) brightness(1.1); }
+            }
+            
+            @keyframes textAppear {
+                0% { opacity: 0; transform: translateX(-50%) translateY(-20px); }
+                100% { opacity: 1; transform: translateX(-50%) translateY(0); }
+            }
+            
+            @keyframes particleFloat {
+                0% { transform: translateY(100vh) scale(0); opacity: 0; }
+                10% { opacity: 1; transform: translateY(90vh) scale(1); }
+                90% { opacity: 1; transform: translateY(10vh) scale(1); }
+                100% { transform: translateY(-10vh) scale(0); opacity: 0; }
+            }
+            
+            @keyframes lightningFlash {
+                0% { background: rgba(255, 255, 255, 0); }
+                50% { background: rgba(255, 255, 255, 0.8); }
+                100% { background: rgba(255, 255, 255, 0); }
+            }
+        `;
+        document.head.appendChild(style);
+
+        // Agregar al DOM
+        const host = this.canvas.parentElement || document.body;
+        host.appendChild(overlay);
+
+        this._witchOverlay = overlay;
+        this._witchLightning = lightning;
+        this._witchParticles = particlesContainer;
+    }
+
+    _showWitchTransition(doorId, snapshot, callback) {
+        if (!this._witchOverlay) return;
+
+        // Mostrar overlay
+        this._witchOverlay.style.display = 'flex';
+
+        // Reproducir audio
+        this._witchAudio.currentTime = 0;
+        this._witchAudio.play().catch(e => console.log('Error audio bruja:', e));
+
+        // Crear partículas
+        this._createTransitionParticles();
+
+        // Efectos de rayo
+        this._createLightningEffects();
+
+        // Ocultar después de 3 segundos y ejecutar callback
+        setTimeout(() => {
+            this._hideWitchTransition();
+            if (callback) callback();
+        }, 3000);
+    }
+
+    _hideWitchTransition() {
+        if (this._witchOverlay) {
+            this._witchOverlay.style.display = 'none';
+        }
+        if (this._witchAudio) {
+            this._witchAudio.pause();
+        }
+    }
+
+    _createTransitionParticles() {
+        for (let i = 0; i < 15; i++) {
+            setTimeout(() => {
+                const particle = document.createElement('div');
+                particle.style.cssText = `
+                    position: absolute;
+                    width: ${Math.random() * 6 + 2}px;
+                    height: ${Math.random() * 6 + 2}px;
+                    background: ${['#ff6b6b', '#4ecdc4', '#ffe66d'][Math.floor(Math.random() * 3)]};
+                    border-radius: 50%;
+                    left: ${Math.random() * 100}%;
+                    animation: particleFloat ${8 + Math.random() * 4}s linear forwards;
+                `;
+                this._witchParticles.appendChild(particle);
+
+                setTimeout(() => particle.remove(), 12000);
+            }, i * 100);
+        }
+    }
+
+    _createLightningEffects() {
+        const flashCount = 3;
+        for (let i = 0; i < flashCount; i++) {
+            setTimeout(() => {
+                this._witchLightning.style.animation = 'lightningFlash 0.3s ease-out';
+                setTimeout(() => {
+                    this._witchLightning.style.animation = '';
+                }, 300);
+            }, i * 800 + Math.random() * 500);
+        }
+    }
+
     /* === Colisiones bala - puerta === */
     _handleBulletDoorCollisions() {
         if (this._entering) return; // evita múltiples triggers
@@ -228,8 +438,8 @@ export default class Level1Scene {
                     // 2) invalidar bala
                     b.dead = true;
 
-                    // 3) feedback + entrar
-                    this._flashHint(`¡Puerta ${doorId} rota! Entrando...`);
+                    // 3) feedback + entrar con transición
+                    this._flashHint(`¡Puerta ${doorId} destruida!`);
 
                     // snapshot para volver exactamente al mismo lugar
                     const snapshot = {
@@ -240,7 +450,14 @@ export default class Level1Scene {
 
                     // Entrar en micro-tick para evitar reentradas
                     this._entering = true;
-                    setTimeout(() => this.enterDoorById(doorId, snapshot), 0);
+
+                    // 🧙‍♀️ MOSTRAR TRANSICIÓN DE BRUJA ANTES DE ENTRAR
+                    setTimeout(() => {
+                        this._showWitchTransition(doorId, snapshot, () => {
+                            this.enterDoorById(doorId, snapshot);
+                        });
+                    }, 500); // Pequeño delay para ver la puerta desaparecer
+
                     return;
                 }
             }
