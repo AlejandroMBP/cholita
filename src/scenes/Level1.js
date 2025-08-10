@@ -250,7 +250,7 @@ export default class Level1Scene {
 
         // Imagen de la bruja
         const witchImg = document.createElement('img');
-        witchImg.src = '/bruja/bru.jpg.png';
+        witchImg.src = './bruja/bru.jpg.png';
         witchImg.style.cssText = `
             width: 100%;
             height: auto;
