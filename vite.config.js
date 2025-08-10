@@ -1,15 +1,20 @@
+// vite.config.js
 import { defineConfig } from 'vite'
+import { resolve } from 'path'
 
 export default defineConfig({
     server: {
-        port: 5173,
-        open: '/bruja/inicio.html'   // <- abre tu portada
+        // Abre directamente la portada en /bruja
+        open: '/bruja/inicio.html',
+        // (opcional) permite abrir desde otras máquinas en la red
+        // host: true
     },
     build: {
         rollupOptions: {
             input: {
-                juego: 'index.html',            // tu juego del raíz
-                inicio: 'bruja/inicio.html'     // tu portada en /bruja
+                // multipágina: declara ambas entradas para build
+                juego: resolve(__dirname, 'index.html'),
+                inicio: resolve(__dirname, 'bruja/inicio.html'),
             }
         }
     }

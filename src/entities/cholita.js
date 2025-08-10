@@ -18,7 +18,7 @@ export default class Cholita {
         this.hp = 3;
 
         // Config de movimiento
-        this.speed = opts.speed ?? 320;     // lateral
+        this.speed = opts.speed ?? 320;   // lateral
         this.vSpeed = opts.vSpeed ?? 220;   // arriba/abajo en el lane
         this.jumpSpeed = opts.jumpSpeed ?? 800;
         this.gravity = opts.gravity ?? 2200;
@@ -26,15 +26,19 @@ export default class Cholita {
         // Lane vertical
         this.laneTop = opts.laneTop ?? 0;
         this.laneBottom = opts.laneBottom ?? 0;
-        this.groundY = this.y + this.h;
+        // groundY = altura de “suelo” actual; si hay laneBottom úsalo, si no, pies actuales
+        this.groundY = this.laneBottom || (this.y + this.h);
 
-        // --- NUEVO: flag de movimiento dentro del lane para animación ---
+        // Animación lane
         this.laneMove = 0; // -1 subiendo, 1 bajando, 0 quieta
 
         // Disparo
-        this.cooldown = 1;
-        this.shootFn = opts.onShoot || (() => { });
+        this.cooldown = 0;
+        this.shootFn = typeof opts.onShoot === 'function' ? opts.onShoot : () => { };
         this.shootAnimTime = 0;
+
+        // Para detectar teclas recién pulsadas
+        this.prevKeys = new Set();
 
         // Estado/animación
         this.state = 'idle'; // 'idle' | 'run' | 'jump'
@@ -47,61 +51,74 @@ export default class Cholita {
             run1: this._loadImage(run1Png),
             run2: this._loadImage(run2Png),
             jump: this._loadImage(jumpPng),
-            shoot: this._loadImage(shootPng)
+            shoot: this._loadImage(shootPng),
         };
     }
 
     _loadImage(src) {
         const img = new Image();
-        img.src = src;
         img.loaded = false;
         img.onload = () => { img.loaded = true; };
+        img.src = src;
         return img;
     }
 
     get bottom() { return this.y + this.h; }
     set bottom(v) { this.y = v - this.h; }
 
+    // ====== Entrada segura ======
     handleInput(keys, dt) {
+        // Blindajes
+        if (!keys) keys = new Set();
+        dt = Math.max(0, Math.min(0.05, dt || 0)); // evita dt absurdos
+
+        const down = (code) => keys.has(code);
+        const justPressed = (code) => down(code) && !this.prevKeys.has(code);
+
         // Lateral
-        let ax = 0;
-        if (keys.has('ArrowLeft') || keys.has('KeyA')) { ax = -1; this.facing = -1; }
-        if (keys.has('ArrowRight') || keys.has('KeyD')) { ax = 1; this.facing = 1; }
-        this.vx = ax * this.speed;
+        this.vx = 0;
+        if (down('ArrowLeft') || down('KeyA')) { this.vx = -this.speed; this.facing = -1; }
+        if (down('ArrowRight') || down('KeyD')) { this.vx = this.speed; this.facing = 1; }
 
-        // --- reset del flag de movimiento vertical por cuadro ---
+        // Arriba/abajo en suelo (estilo Metal Slug)
         this.laneMove = 0;
-
-        // Arriba/abajo solo en suelo (estilo Metal Slug)
         if (this.onGround) {
             let ay = 0;
-            if (keys.has('ArrowUp') || keys.has('KeyW')) ay = -1;
-            if (keys.has('ArrowDown') || keys.has('KeyS')) ay = 1;
+            if (down('ArrowUp') || down('KeyW')) ay = -1;
+            if (down('ArrowDown') || down('KeyS')) ay = 1;
 
-            // Guardar intención para la animación
             this.laneMove = ay;
 
-            // Desplazar dentro del lane
-            this.bottom += ay * this.vSpeed * dt;
-            if (this.bottom < this.laneTop) this.bottom = this.laneTop;
-            if (this.bottom > this.laneBottom) this.bottom = this.laneBottom;
-
-            // Mueve el “piso” personal con el lane
-            this.groundY = this.bottom;
+            // Solo limitar si el lane tiene sentido
+            if (this.laneBottom > this.laneTop) {
+                this.bottom += ay * this.vSpeed * dt;
+                if (this.bottom < this.laneTop) this.bottom = this.laneTop;
+                if (this.bottom > this.laneBottom) this.bottom = this.laneBottom;
+                // cuando estás en suelo, el “suelo” es tu propia línea actual
+                this.groundY = this.bottom;
+            }
         }
 
-        // Saltar (Espacio)
-        if (keys.has('Space') && this.onGround) {
+        // Saltar (solo en suelo)
+        if (justPressed('Space') && this.onGround) {
             this.vy = -this.jumpSpeed;
             this.onGround = false;
         }
 
-        // Disparo (J o Ctrl izq)
-        this.cooldown -= dt;
-        if ((keys.has('KeyJ') || keys.has('ControlLeft')) && this.cooldown <= 0) {
+        // Lanzar (Ctrl izq/der) o tecla J (por si prefieres)
+        this.cooldown = Math.max(0, this.cooldown - dt);
+        const ctrlPressed = down('ControlLeft') || down('ControlRight');
+        const ctrlJustPressed = (ctrlPressed && (!this.prevKeys.has('ControlLeft') && !this.prevKeys.has('ControlRight'))) || justPressed('KeyJ');
+
+        // No disparar el mismo frame que arrancas el salto
+        if (ctrlJustPressed && this.cooldown <= 0 && this.onGround) {
             this.shoot();
-            this.cooldown = 0.15;
+            this.cooldown = 0.15; // 150 ms
         }
+
+        // Guardar estado actual para el próximo frame
+        // (Clonar para no compartir referencia)
+        this.prevKeys = new Set(keys);
     }
 
     shoot() {
@@ -111,7 +128,13 @@ export default class Cholita {
         this.shootFn({ x: bx, y: by, dir: this.facing });
     }
 
+    // ====== Update principal ======
     update(keys, dt) {
+        // Blindajes
+        if (!keys) keys = new Set();
+        dt = Math.max(0, Math.min(0.05, dt || 0));
+
+        // Entrada
         this.handleInput(keys, dt);
 
         // Integración X
@@ -127,15 +150,20 @@ export default class Cholita {
                 this.vy = 0;
                 this.onGround = true;
             }
+        } else {
+            // Pegada al suelo actual del lane
+            if (this.laneBottom > this.laneTop) {
+                this.bottom = this.groundY;
+            }
         }
 
-        // Temporizador de disparo
+        // Temporizador de disparo (para sprite de lanzamiento)
         if (this.shootAnimTime > 0) {
             this.shootAnimTime -= dt;
             if (this.shootAnimTime < 0) this.shootAnimTime = 0;
         }
 
-        // --- Estado base (ahora cuenta movimiento vertical en el suelo como "run") ---
+        // Estado base
         if (!this.onGround) {
             this.state = 'jump';
         } else if (Math.abs(this.vx) > 1 || this.laneMove !== 0) {
@@ -155,9 +183,12 @@ export default class Cholita {
         else if (this.state === 'run') {
             const frame = Math.floor(this.animTime * this.runFps) % 2;
             img = frame === 0 ? this.sprites.run1 : this.sprites.run2;
-        } else img = this.sprites.idle;
+        } else {
+            img = this.sprites.idle;
+        }
 
-        if (!img || !img.loaded) {
+        // Si el sprite no está listo, dibuja placeholder
+        if (!img || !img.loaded || !img.naturalWidth || !img.naturalHeight) {
             ctx.fillStyle = '#7e2d86';
             ctx.fillRect(Math.floor(this.x - cameraX), Math.floor(this.y), this.w, this.h);
             return;
@@ -185,3 +216,6 @@ export default class Cholita {
         }
     }
 }
+
+/* ===== Utils ===== */
+const clamp = (v, a, b) => Math.max(a, Math.min(b, v));

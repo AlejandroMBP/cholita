@@ -9,85 +9,65 @@
 
   <link rel="stylesheet" href="/src/style.css" />
   <style>
-    /* === Estilos exclusivos del menú de inicio === */
-    #menu {
-      position: absolute;
+    /* Pantalla de transición */
+    #transition {
+      position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.85) url('/src/assets/menu-bg.png') center/cover no-repeat;
+      background: rgba(0, 0, 0, 1) url('/src/assets/menu-bg.png') center/cover no-repeat;
       display: flex;
-      flex-direction: column;
       justify-content: center;
       align-items: center;
-      gap: 20px;
-      z-index: 100;
-    }
-
-    #menu h1 {
-      font-size: 3rem;
       color: white;
-      text-shadow: 2px 2px 5px black;
-      margin-bottom: 15px;
+      font-size: 2rem;
+      z-index: 999;
+      opacity: 1;
+      transition: opacity 1.5s ease-out;
     }
 
-    #menu form {
-      background: rgba(0, 0, 0, 0.7);
-      padding: 20px;
-      border-radius: 10px;
+    #transition.fade-out {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .hud {
+      position: fixed;
+      top: 10px;
+      left: 10px;
       display: flex;
-      flex-direction: column;
-      gap: 12px;
-      min-width: 250px;
-    }
-
-    #menu input {
-      padding: 10px;
-      border: none;
-      border-radius: 5px;
-      font-size: 1rem;
-    }
-
-    #menu button {
-      padding: 10px;
-      background: #ff7f50;
-      border: none;
-      border-radius: 5px;
+      gap: 15px;
+      font-size: 18px;
       color: white;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background 0.2s;
-    }
-
-    #menu button:hover {
-      background: #ff6347;
+      z-index: 10;
     }
   </style>
 </head>
 
 <body>
-  <div id="menu">
-    <h1>La Cholita Embrujada</h1>
-    <form id="login-form">
-      <button type="submit">Iniciar Juego</button>
-    </form>
-  </div>
 
+  <!-- Pantalla de transición -->
+  <div id="transition">Cargando...</div>
+
+  <!-- Juego -->
   <canvas id="game"></canvas>
 
+  <!-- HUD del juego -->
   <div class="hud">
     <span>❤️ <b id="hp">3</b></span>
     <span>🔫 <b id="ammo">∞</b></span>
     <span>👾 <b id="score">0</b></span>
   </div>
 
+  <!-- Script del juego -->
   <script type="module" src="/src/main.js"></script>
   <script>
-    // Mostrar el juego cuando se envía el formulario
-    document.getElementById('login-form').addEventListener('submit', (e) => {
-      e.preventDefault();
-      document.getElementById('menu').style.display = 'none';
-      document.getElementById('game').style.display = 'block';
+    // Simula carga y luego quita la transición
+    window.addEventListener('load', () => {
+      setTimeout(() => {
+        document.getElementById('transition').classList.add('fade-out');
+      }, 1000); // Tiempo antes de iniciar la transición
     });
   </script>
+
 </body>
 
 </html>
